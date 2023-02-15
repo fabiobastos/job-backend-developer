@@ -2,11 +2,14 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+
 
 class Handler extends ExceptionHandler
 {
+    use ApiHandler;
+
     /**
      * A list of the exception types that are not reported.
      *
@@ -37,5 +40,16 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $exception)
+    {
+        if($request->is('api/*')){
+            if($respostaPersonalizada = $this->tratarErros($exception)){
+                return $respostaPersonalizada;
+            }
+        }
+
+        return parent::render($request,$exception);
     }
 }

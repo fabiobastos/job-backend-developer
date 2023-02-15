@@ -121,8 +121,6 @@ class ProductController extends Controller
     {
         if($product->delete()){
             return response([],204) ;
-        }else{
-            return response('',404);
         }
     }
 }
