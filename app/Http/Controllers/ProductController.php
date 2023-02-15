@@ -4,22 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Requests\ProductRequest;
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductCollection;
 
 class ProductController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return ProductCollection
      */
-    public function index(): Response
+    public function index(Request $request): ProductCollection
     {
-        $products = Product::with('category')->get()->map(function($product){
-            return Product::productResponse($product);
+        $query = Product::with('category');
+        $query->when($request->search, function ($query,$search) {
+            return $query->where('name', 'like', '%'.$search.'%')
+                ->orWhereRelation('category', 'name', 'like', '%'.$search.'%');
         });
-        return response($products,200);
+        $query->when($request->category, function ($query,$search) {
+            return $query->whereRelation('category', 'name', 'like', '%'.$search.'%');
+        });
+        $query->when($request->withImage, function ($query,$bool) {
+            return $bool === 'true' ?  $query->whereNotNull('image_url') : $query->whereNull('image_url');
+        });
+        $query->when($request->product_id, function ($query,$id) {
+            return $query->where('id', '=', intval($id));
+        });
+
+        return new ProductCollection($query->get());
     }
 
     /**
@@ -28,28 +44,28 @@ class ProductController extends Controller
      * @param  \App\Http\Requests\ProductRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(ProductRequest $request): Response
+    public function store(ProductRequest $request): ProductResource
     {
         $product = new Product;
         $product->name = $request->name;
         $product->price = $request->price;
         $product->description = $request->description;
         $product->image_url = $request->image_url ?: null;
-        $product->category_id = Product::setCategory($request->category);
+        $product->category_id = Category::firstOrCreate(['name' => $request->category])->id;
         $product->save();
 
-        return response(Product::productResponse($product),201);
+        return new ProductResource($product);
     }
 
     /**
      * Display the specified resource.
      *
      * @param  \App\Models\Product $product
-     * @return \Illuminate\Http\Response
+     * @return ProductResource
      */
-    public function show(Product $product): Response
+    public function show(Product $product): ProductResource
     {
-        return response(Product::productResponse($product),200);
+        return new ProductResource($product);
     }
 
     /**
@@ -57,21 +73,21 @@ class ProductController extends Controller
      *
      * @param  \App\Http\Requests\ProductRequest  $request
      * @param  \App\Models\Product $product
-     * @return \Illuminate\Http\Response
+     * @return ProductResource
      */
-    public function update(ProductRequest $request, Product $product): Response
+    public function update(ProductRequest $request, Product $product): ProductResource
     {
         $product->name = $request->name ?: $product->name;
         $product->price = $request->price ?: $product->price;
-        $product->description = $request->description ?: $product->description;
         $product->image_url = $request->image_url ?: $product->image_url;
+        $product->description = $request->description ?: $product->description;
 
         if($request->category){
-            $product->category_id = Product::setCategory($request->category);
+            $product->category_id = Category::firstOrCreate(['name' => $request->category])->id;
         }
         $product->save();
 
-        return response(Product::productResponse($product));
+        return new ProductResource($product);
     }
 
     /**
