@@ -17,14 +17,7 @@ class ProductController extends Controller
     public function index(): Response
     {
         $products = Product::with('category')->get()->map(function($product){
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'price' => floatval($product->price),
-                'description' => $product->description,
-                'category' => $product->category->name,
-                'image_url' => $product->image_url,
-            ];
+            return Product::productResponse($product);
         });
         return response($products,200);
     }
@@ -42,19 +35,10 @@ class ProductController extends Controller
         $product->price = $request->price;
         $product->description = $request->description;
         $product->image_url = $request->image_url ?: null;
-
-        if($category = Category::where('name' , '=', $request->category)->first()){
-            $product->category_id = $category->id;
-        }else{
-            $newCategory = new Category;
-            $newCategory->name = $request->category;
-            $newCategory->save();
-            $product->category_id = $newCategory->id;
-        }
-
+        $product->category_id = Product::setCategory($request->category);
         $product->save();
 
-        return response($product,201);
+        return response(Product::productResponse($product),201);
     }
 
     /**
@@ -65,14 +49,7 @@ class ProductController extends Controller
      */
     public function show(Product $product): Response
     {
-        return response([
-            'id' => $product->id,
-            'name' => $product->name,
-            'price' => floatval($product->price),
-            'description' => $product->description,
-            'category' => $product->category->name,
-            'image_url' => $product->image_url,
-        ],200);
+        return response(Product::productResponse($product),200);
     }
 
     /**
@@ -90,25 +67,11 @@ class ProductController extends Controller
         $product->image_url = $request->image_url ?: $product->image_url;
 
         if($request->category){
-            if($category = Category::where('name' , '=', $request->category)->first()){
-                $product->category_id = $category->id;
-            }else{
-                $newCategory = new Category;
-                $newCategory->name = $request->category;
-                $newCategory->save();
-                $product->category_id = $newCategory->id;
-            }
+            $product->category_id = Product::setCategory($request->category);
         }
         $product->save();
 
-        return response([
-            'id' => $product->id,
-            'name' => $product->name,
-            'price' => floatval($product->price),
-            'description' => $product->description,
-            'category' => $product->category->name,
-            'image_url' => $product->image_url,
-        ]);
+        return response(Product::productResponse($product));
     }
 
     /**
