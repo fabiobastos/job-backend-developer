@@ -4,9 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\ImportProductsService;
-use Illuminate\Http\Client\RequestException;
-
-use function PHPUnit\Framework\isInstanceOf;
 
 class ImportProducts extends Command
 {
@@ -77,7 +74,7 @@ class ImportProducts extends Command
             if($tableReturn['errors'] > 0){
                 $this->error('Products importing proccess finished with errors.');
             }else{
-                $this->info('Products importing proccess finished successfully.');
+                $this->info('Products importing proccess finished without errors.');
             }
             $this->newLine(2);
             print_r($tableReturn);
