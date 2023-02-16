@@ -58,7 +58,7 @@ class ApiTest extends TestCase
      *
      * @return void
      */
-    public function test_api_with_existing_name()
+    public function test_if_api_blocks_update_returning_400_on_existing_name()
     {
         $fakeData = new ProductFactory;
         $payload = $fakeData->definition();
@@ -77,7 +77,7 @@ class ApiTest extends TestCase
      *
      * @return void
      */
-    public function test_api_update()
+    public function test_if_api_updates_product()
     {
         $fakeData = new ProductFactory;
         $payload = $fakeData->definition();
@@ -98,7 +98,7 @@ class ApiTest extends TestCase
      *
      * @return void
      */
-    public function test_api_update_removing_image()
+    public function test_if_api_updates_removing_image()
     {
         $fakeData = new ProductFactory;
         $payload = $fakeData->definition();
@@ -109,5 +109,22 @@ class ApiTest extends TestCase
             ['image_url'=>null]
         );
         $this->assertNull($response->json()['image_url']);
+    }
+
+    /**
+     * Testando deleção de um produto
+     *
+     * @return void
+     */
+    public function test_if_api_deletes_product()
+    {
+        $fakeData = new ProductFactory;
+        $payload = $fakeData->definition();
+        $productToBeDeleted = $this->post('/api/products', $payload);
+
+        $response = $this->delete(
+            '/api/products/'.$productToBeDeleted['id']
+        );
+        $response->assertStatus(204);
     }
 }
