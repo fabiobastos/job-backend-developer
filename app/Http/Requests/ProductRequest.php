@@ -29,7 +29,13 @@ class ProductRequest extends FormRequest
             'price' => [$required,'numeric'],
             'description' => [$required,'string','between:2,1000'],
             'category' => [$required,'string'],
-            "image_url" => ['sometimes','url']
+            "image_url" => ['sometimes',function($attribute, $value, $invalid) {
+                $updateImg = isset($this->product)? ", or null if you want to remove it.":".";
+                return (
+                    filter_var($value, FILTER_VALIDATE_URL) || is_null($value) ?:
+                    $invalid("The image_url must be a valid URL".$updateImg)
+                );
+            }]
         ];
     }
 }

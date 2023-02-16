@@ -79,7 +79,9 @@ class ProductController extends Controller
     {
         $product->name = $request->name ?: $product->name;
         $product->price = $request->price ?: $product->price;
-        $product->image_url = $request->image_url ?: $product->image_url;
+        $product->image_url = $request->image_url ?
+                    $request->image_url :
+                    (is_null($request->image_url) ? null : $product->image_url);
         $product->description = $request->description ?: $product->description;
 
         if($request->category){
