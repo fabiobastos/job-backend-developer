@@ -28,7 +28,7 @@ class ProductController extends Controller
         $query->when($request->category, function ($query,$search) {
             return $query->whereRelation('category', 'name', 'like', '%'.$search.'%');
         });
-        $query->when($request->withImage, function ($query,$bool) {
+        $query->when($request->with_image, function ($query,$bool) {
             return $bool === 'true' ?  $query->whereNotNull('image_url') : $query->whereNull('image_url');
         });
         $query->when($request->product_id, function ($query,$id) {
